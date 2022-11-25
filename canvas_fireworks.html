@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        canvas {
+            display: block;
+            background-color: rgba(0, 0, 0, 1);
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas></canvas>
+    <script>
+        const canvas = document.getElementsByTagName("canvas")[0];
+        const ctx = canvas.getContext("2d");
+
+        window.addEventListener("load", () => {
+            canvas.width = document.documentElement.clientWidth;
+            canvas.height = document.documentElement.clientHeight;
+        })
+
+        window.addEventListener("resize", () => {
+            canvas.width = document.documentElement.clientWidth;
+            canvas.height = document.documentElement.clientHeight;
+        })
+
+        let fireworks = [];
+        let launchArr = [];
+        canvas.addEventListener("click", (event) => {
+            for (let i = 0; i < 5; i++) {
+                let particle = new Launch(canvas.width / 6 + canvas.width * i / 6, canvas.height);
+                particle.dx = 0;
+                particle.dy = 10;
+            }
+        })
+        setInterval(() => {
+            ctx.fillStyle = "rgba(0,0,0,0.1)"
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < launchArr.length; i++) {
+                launchArr[i].upload();
+                launchArr[i] && launchArr[i].draw();
+            }
+            for (let i = 0; i < fireworks.length; i++) {
+                fireworks[i].upload();
+                fireworks[i] && fireworks[i].draw();
+            }
+        }, 30)
+
+        setInterval(() => {
+            new Launch(Math.random() * canvas.width / 4 + canvas.width * 3 / 8, canvas.height)
+        }, 800)
+
+        function Firework(posX, posY, color) {
+            this.posX = posX;
+            this.posY = posY;
+            let angle = Math.PI * Math.random() * 2;
+            let speed = Math.random() * 5 + 10;
+            this.moveX = Math.cos(angle) * speed;
+            this.moveY = Math.sin(angle) * speed;
+            this.radius = Math.random() * 5 + 8;
+            this.ransistance = 0.92;
+            this.gravity = 0.2;
+            this.shrink = Math.random() * 0.05 + 0.92;
+            this.color = color;
+            fireworks.push(this);
+        }
+        Firework.prototype.upload = function () {
+            this.moveX *= this.ransistance;
+            this.moveY *= this.ransistance;
+            this.moveY += this.gravity;
+
+            this.posX += this.moveX;
+            this.posY += this.moveY;
+
+            this.radius *= this.shrink;
+            if (this.radius < 0.1) {
+                this.remove();
+            }
+        }
+        Firework.prototype.remove = function () {
+            for (let i = 0; i < fireworks.length; i++) {
+                if (fireworks[i] == this) {
+                    fireworks.splice(i, 1);
+                }
+            }
+        }
+        Firework.prototype.draw = function () {
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+            ctx.beginPath();
+            ctx.arc(this.posX, this.posY, this.radius, 0, Math.PI * 2, false);
+            ctx.closePath();
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.restore();
+        }
+
+
+
+        function Launch(x, y) {
+            this.x = x;
+            this.y = y;
+            this.r = 5;
+            this.dx = Math.random() * 4 - 2;
+            this.dy = Math.random() * 5 + 7;
+            this.color = "";
+            launchArr.push(this);
+        }
+        Launch.prototype.upload = function () {
+            this.x += this.dx;
+            this.y -= this.dy;
+            let deadline = Math.random() * canvas.width / 8;
+            if (this.y < deadline) {
+                this.remove()
+            }
+        }
+
+        Launch.prototype.remove = function () {
+            for (let i = 0; i < launchArr.length; i++) {
+                if (launchArr[i] == this) {
+                    launchArr.splice(i, 1);
+                    let count = Math.random() * 10 + 80;
+                    let colorCode = getColor();
+                    for (let i = 0; i < count; i++) {
+                        new Firework(this.x, this.y, colorCode);
+                    }
+                }
+
+            }
+        }
+        Launch.prototype.draw = function () {
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, false);
+            let gradient = ctx.createRadialGradient(this.x, this.y, 1, this.x, this.y, this.r);
+            gradient.addColorStop(0.1, "rgba(255,255,255," + 1 + ")");
+            gradient.addColorStop(1, "rgba(0,0,0," + 1 + ")")
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.restore();
+        }
+
+
+
+
+        function getColor() {
+            let str = "0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f";
+            let alphate = str.split(",");
+            let colorCode = "#";
+            for (let i = 0; i < 6; i++) {
+                let index = parseInt(Math.random() * 16);
+                colorCode += alphate[index];
+            }
+            return colorCode;
+        }
+
+    </script>
+</body>
+
+</html>
